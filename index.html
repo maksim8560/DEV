@@ -6,9 +6,7 @@
   <title>ГЦЛ DNS — Гарантия низкой цены</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
     body {
       font-family: 'Inter', system-ui, sans-serif;
       background: linear-gradient(135deg, #0a0f1c 0%, #1a2338 100%);
@@ -16,7 +14,6 @@
       min-height: 100vh;
       padding: 20px;
     }
-
     .container {
       max-width: 660px;
       margin: 40px auto;
@@ -27,7 +24,6 @@
       box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
       border: 1px solid rgba(148, 163, 184, 0.1);
     }
-
     h1 {
       text-align: center;
       font-size: 2.5rem;
@@ -37,39 +33,37 @@
       -webkit-text-fill-color: transparent;
       margin-bottom: 8px;
     }
-
     .subtitle {
       text-align: center;
       color: #94a3b8;
       font-size: 1.1rem;
       margin-bottom: 30px;
     }
-
     .region-buttons {
       display: flex;
-      gap: 14px;
+      gap: 12px;
       margin-bottom: 35px;
+      flex-wrap: wrap;
     }
-
     .region-btn {
       flex: 1;
+      min-width: 180px;
       padding: 16px 20px;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-weight: 600;
       border: none;
       border-radius: 14px;
       cursor: pointer;
       transition: all 0.4s ease;
     }
-
     .btn-vs { background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; }
     .btn-zs { background: linear-gradient(135deg, #6d28d9, #8b5cf6); color: white; }
+    .btn-vv { background: linear-gradient(135deg, #ea580c, #f97316); color: white; }
 
     .region-btn.active {
       transform: translateY(-4px) scale(1.04);
       box-shadow: 0 15px 30px rgba(0,0,0,0.4);
     }
-
     input {
       width: 100%;
       padding: 16px 20px;
@@ -81,12 +75,10 @@
       font-size: 1.25rem;
       transition: all 0.3s;
     }
-
     input:focus {
       border-color: #60a5fa;
       box-shadow: 0 0 0 4px rgba(96,165,250,0.15);
     }
-
     button.calculate {
       width: 100%;
       padding: 18px;
@@ -101,12 +93,10 @@
       box-shadow: 0 10px 25px rgba(34,197,94,0.35);
       transition: all 0.4s;
     }
-
     button.calculate:hover {
       transform: translateY(-3px);
       box-shadow: 0 15px 35px rgba(34,197,94,0.45);
     }
-
     .result {
       margin-top: 20px;
       padding: 24px;
@@ -117,7 +107,6 @@
       display: none;
       border-left: 6px solid #34d399;
     }
-
     .info-box {
       margin-top: 25px;
       padding: 18px;
@@ -127,11 +116,9 @@
       color: #cbd5e1;
       border-left: 5px solid #60a5fa;
     }
-
     .green { color: #34d399; font-weight: 700; }
     .red { color: #f87171; }
     .yellow { color: #fbbf24; }
-
     .creator {
       margin-top: 50px;
       text-align: center;
@@ -146,57 +133,77 @@
   <div class="container">
     <h1>Гарантия низкой цены</h1>
     <p class="subtitle">DNS — Расчёт ГЦЛ</p>
-
+    
     <div class="region-buttons">
-      <button id="btnVS" class="region-btn btn-vs active" onclick="selectRegion('VS')">Восточная Сибирь (ВС)</button>
+      <button id="btnVS" class="region-btn btn-vs" onclick="selectRegion('VS')">Восточная Сибирь (ВС)</button>
       <button id="btnZS" class="region-btn btn-zs" onclick="selectRegion('ZS')">Западная Сибирь (ЗС)</button>
+      <button id="btnVV" class="region-btn btn-vv active" onclick="selectRegion('VV')">Верхняя Волга (ВВ)</button>
     </div>
 
-    <input type="number" id="priceDNS" placeholder="Цена в DNS (руб)" min="1000">
-    <input type="number" id="priceComp" placeholder="Цена у конкурента (руб)" min="1000">
+    <input type="number" id="priceDNS" placeholder="Цена в DNS (руб)" min="300">
+    <input type="number" id="priceComp" placeholder="Цена у конкурента (руб)" min="300">
 
     <button class="calculate" onclick="calculate()">Рассчитать скидку</button>
-
+    
     <div id="result" class="result"></div>
 
-    <!-- Информационный блок с условиями ВС -->
-    <div id="infoVS" class="info-box">
+    <!-- Инфо ВС -->
+    <div id="infoVS" class="info-box" style="display: none;">
       <strong>Условия акции для ВС:</strong><br>
       Скидка = 10% от разницы в цене (на практике 110% от разницы).<br><br>
       <strong>Пример:</strong> 25 000 − 23 000 = 2000 × 1.1 = 2200 ₽ скидки.<br>
       Итог: товар за 22 800 ₽
     </div>
 
+    <!-- Инфо ЗС -->
     <div id="infoZS" class="info-box" style="display: none;">
       <strong>Условия акции для ЗС:</strong><br>
       Фиксированная скидка <strong>500 рублей</strong> от цены конкурента.<br>
       Цена конкурента должна быть не ниже 3000 ₽, разница — не менее 100 ₽.
     </div>
 
+    <!-- Инфо ВВ (Верхняя Волга) -->
+    <div id="infoVV" class="info-box">
+      <strong>Условия акции для ВВ (Верхняя Волга):</strong><br><br>
+      • Срок акции: 17.02.2023 — 31.01.2027<br>
+      • Товары от 300 ₽<br>
+      • Разница в цене не менее 10 ₽<br>
+      • Максимальная скидка — не более 30% от цены DNS<br><br>
+      • Если цена конкурента 300 – 3000 ₽ → скидка <strong>50 ₽</strong><br>
+      • Если цена конкурента от 3000 ₽ → скидка <strong>500 ₽</strong><br><br>
+      <strong>Пример:</strong><br>
+      Холодильник в DNS — 25 000 ₽<br>
+      У конкурента — 24 500 ₽<br>
+      Скидка 500 ₽ → итого <span class="green">24 000 ₽</span>
+    </div>
+
     <div class="creator">
-      Создал: Максим (ТГ: MaxDiWay )
+      Создал: Максим (ТГ: MaxDiWay)
     </div>
   </div>
 
   <script>
-    let currentRegion = 'VS';
+    let currentRegion = 'VV';
 
     function selectRegion(region) {
       currentRegion = region;
-
+      
+      // Активная кнопка
       document.getElementById('btnVS').classList.toggle('active', region === 'VS');
       document.getElementById('btnZS').classList.toggle('active', region === 'ZS');
+      document.getElementById('btnVV').classList.toggle('active', region === 'VV');
 
-      // Переключаем информационные блоки
+      // Переключение инфоблоков
       document.getElementById('infoVS').style.display = region === 'VS' ? 'block' : 'none';
       document.getElementById('infoZS').style.display = region === 'ZS' ? 'block' : 'none';
+      document.getElementById('infoVV').style.display = region === 'VV' ? 'block' : 'none';
 
       document.getElementById('result').style.display = 'none';
     }
 
     function calculate() {
-      const dns = parseInt(document.getElementById('priceDNS').value);
-      const comp = parseInt(document.getElementById('priceComp').value);
+      const dns = parseInt(document.getElementById('priceDNS').value) || 0;
+      const comp = parseInt(document.getElementById('priceComp').value) || 0;
       const resultDiv = document.getElementById('result');
 
       if (!dns || !comp) {
@@ -204,20 +211,19 @@
         return;
       }
 
-      if (comp < 3000) {
-        showResult(`<span class="red">[ОТКАЗ] Цена конкурента должна быть ≥ 3000 ₽</span>`, true);
+      if (comp < 300) {
+        showResult(`<span class="red">[ОТКАЗ] Цена конкурента должна быть ≥ 300 ₽</span>`, true);
         return;
       }
 
       const diff = dns - comp;
-
       if (diff <= 0) {
-        showResult(`<span class="yellow">[!] Скидка не положена: цена конкурента не ниже</span>`, true);
+        showResult(`<span class="yellow">[!] Скидка не положена: цена конкурента не ниже цены DNS</span>`, true);
         return;
       }
 
-      if (diff < 100) {
-        showResult(`<span class="red">[ОТКАЗ] Разница должна быть ≥ 100 ₽</span>`, true);
+      if (diff < 10) {
+        showResult(`<span class="red">[ОТКАЗ] Разница должна быть не менее 10 ₽</span>`, true);
         return;
       }
 
@@ -227,21 +233,46 @@
       if (currentRegion === 'VS') {
         discount = Math.floor(diff * 1.1);
         discountText = `110% от разницы (${diff} × 1.1)`;
-      } else {
+      } 
+      else if (currentRegion === 'ZS') {
+        if (comp < 3000) {
+          showResult(`<span class="red">[ОТКАЗ] Для ЗС цена конкурента должна быть ≥ 3000 ₽</span>`, true);
+          return;
+        }
+        if (diff < 100) {
+          showResult(`<span class="red">[ОТКАЗ] Для ЗС разница должна быть ≥ 100 ₽</span>`, true);
+          return;
+        }
         discount = 500;
         discountText = 'фиксированная скидка 500 ₽';
+      } 
+      else { // Верхняя Волга (ВВ)
+        if (comp >= 3000) {
+          discount = 500;
+          discountText = 'фиксированная скидка 500 ₽ (от 3000 ₽)';
+        } else {
+          discount = 50;
+          discountText = 'фиксированная скидка 50 ₽ (300–3000 ₽)';
+        }
+
+        // Ограничение максимальной скидки 30% от цены DNS
+        const maxDiscount = Math.floor(dns * 0.3);
+        if (discount > maxDiscount) {
+          discount = maxDiscount;
+          discountText += ` (ограничено 30% от цены DNS)`;
+        }
       }
 
       const finalPrice = dns - discount;
       const percent = Math.round((discount / dns) * 100);
 
       const html = `
-        <strong>Регион:</strong> ${currentRegion === 'VS' ? 'Восточная Сибирь (ВС)' : 'Западная Сибирь (ЗС)'}<br>
+        <strong>Регион:</strong> ${currentRegion === 'VS' ? 'Восточная Сибирь (ВС)' : currentRegion === 'ZS' ? 'Западная Сибирь (ЗС)' : 'Верхняя Волга (ВВ)'}<br>
         Цена DNS: <strong>${dns.toLocaleString('ru-RU')} ₽</strong><br>
         Цена конкурента: <strong>${comp.toLocaleString('ru-RU')} ₽</strong><br>
         Разница: <strong>${diff.toLocaleString('ru-RU')} ₽</strong><br><br>
         Скидка: <strong>${discount} ₽</strong> — ${discountText}<br>
-        <span class="green">Итоговая цена: ${finalPrice.toLocaleString('ru-RU')} ₽ (${percent}%)</span>
+        <span class="green">Итоговая цена: ${finalPrice.toLocaleString('ru-RU')} ₽ (${percent}% от цены DNS)</span>
       `;
 
       showResult(html);
@@ -254,10 +285,15 @@
       resultDiv.style.borderLeftColor = isError ? '#f87171' : '#34d399';
     }
 
-    // Расчёт по клавише Enter
+    // Enter для расчёта
     document.addEventListener('keypress', e => {
       if (e.key === 'Enter') calculate();
     });
+
+    // Изначально показываем ВВ
+    window.onload = () => {
+      selectRegion('VV');
+    };
   </script>
 </body>
 </html>
