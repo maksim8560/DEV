@@ -36,6 +36,21 @@ body {
     background-position: center;
     margin-bottom: 15px;
     transition: 0.5s;
+    background-color: #1a1a1a;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Анимация загрузки */
+.cover::before {
+    content: "🎵";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 40px;
+    opacity: 0.3;
+    z-index: 0;
 }
 
 /* Текст */
@@ -113,10 +128,41 @@ button:hover {
     padding: 8px;
     border-radius: 10px;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .station:hover {
     background: rgba(255,255,255,0.1);
+}
+
+.station.active {
+    background: rgba(255,255,255,0.15);
+    border-left: 3px solid #0a84ff;
+}
+
+.station-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-size: cover;
+    background-position: center;
+    background-color: #2a2a2a;
+}
+
+.station-info {
+    flex: 1;
+}
+
+.station-name {
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.station-status {
+    font-size: 11px;
+    color: #888;
 }
 
 /* громкость */
@@ -152,6 +198,28 @@ button:hover {
     color: #888;
     margin-top: 15px;
 }
+
+/* Индикатор LIVE */
+.live-badge {
+    background: #ff3b30;
+    color: white;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 12px;
+    margin-left: 8px;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Ошибка загрузки */
+.cover.error::before {
+    content: "⚠️";
+    color: #ff3b30;
+}
 </style>
 </head>
 
@@ -161,11 +229,14 @@ button:hover {
     <div id="cover" class="cover"></div>
 
     <div class="title" id="title">Station</div>
-    <div class="subtitle" id="track">Загрузка...</div>
+    <div class="subtitle" id="track">
+        Загрузка...
+        <span class="live-badge" id="liveIndicator" style="display: none;">LIVE</span>
+    </div>
 
     <div class="controls">
         <button onclick="prev()">⏮</button>
-        <button class="play" onclick="toggle()">▶</button>
+        <button class="play" onclick="toggle()" id="playBtn">▶</button>
         <button onclick="next()">⏭</button>
     </div>
 
@@ -182,77 +253,182 @@ button:hover {
     </div>
 </div>
 
-<audio id="audio"></audio>
+<audio id="audio" preload="none"></audio>
 
 <script>
+// Станции с ПРЯМЫМИ ССЫЛКАМИ на обложки (не picsum!)
 const stations = [
-    { name: "LoFi Hip Hop", stream: "https://stream.laut.fm/lofi" },
-    { name: "Rock Radio", stream: "https://stream.laut.fm/rockradio" },
-    { name: "HypeFM", stream: "https://air.volna.top/HypeFM" },
-    { name: "Русское Радио", stream: "https://rusradio.hostingradio.ru/rusradio128.mp3" },
-    
+    { 
+        name: "LoFi Hip Hop", 
+        stream: "https://stream.laut.fm/lofi",
+        // Надёжная обложка с Unsplash (музыкальная тема)
+        cover: "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=300&h=300&fit=crop&auto=format"
+    },
+    { 
+        name: "Rock Radio", 
+        stream: "https://stream.laut.fm/rockradio",
+        cover: "https://images.unsplash.com/photo-1498038432885-c6f3f1b912ee?w=300&h=300&fit=crop&auto=format"
+    },
+    { 
+        name: "HypeFM", 
+        stream: "https://air.volna.top/HypeFM",
+        cover: "https://images.unsplash.com/photo-1571330735066-03aaa9429d89?w=300&h=300&fit=crop&auto=format"
+    },
+    { 
+        name: "Русское Радио", 
+        stream: "https://rusradio.hostingradio.ru/rusradio128.mp3",
+        cover: "https://images.unsplash.com/photo-1514320291840-2e0a9bf2a9ae?w=300&h=300&fit=crop&auto=format"
+    }
 ];
 
 let index = 0;
+let isPlaying = false;
 const audio = document.getElementById("audio");
 const volume = document.getElementById("volume");
+const coverEl = document.getElementById("cover");
+const titleEl = document.getElementById("title");
+const trackEl = document.getElementById("track");
+const playBtn = document.getElementById("playBtn");
+const liveIndicator = document.getElementById("liveIndicator");
 
-/* обложка */
-function updateCover() {
-    const random = Math.floor(Math.random() * 1000);
-    document.getElementById("cover").style.backgroundImage =
-        `url(https://picsum.photos/300?random=${random})`;
+// Предзагрузка обложек для ускорения
+function preloadImage(url) {
+    const img = new Image();
+    img.src = url;
 }
 
-/* загрузка */
+stations.forEach(s => preloadImage(s.cover));
+
+/* обложка — теперь берём из данных станции */
+function updateCover(stationIndex) {
+    const station = stations[stationIndex];
+    const coverUrl = station.cover;
+    
+    // Устанавливаем обложку
+    coverEl.style.backgroundImage = `url('${coverUrl}')`;
+    coverEl.classList.remove('error');
+    
+    // Обработка ошибки загрузки (fallback)
+    const img = new Image();
+    img.onerror = () => {
+        // Если Unsplash недоступен, используем градиент с иконкой
+        coverEl.style.backgroundImage = `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`;
+        coverEl.classList.add('error');
+        console.warn('Обложка не загрузилась, используем fallback');
+    };
+    img.src = coverUrl;
+}
+
+/* загрузка станции */
 function load(i) {
     const s = stations[i];
-    document.getElementById("title").innerText = s.name;
-    document.getElementById("track").innerText = "LIVE RADIO";
+    titleEl.innerText = s.name;
+    trackEl.innerHTML = `LIVE RADIO <span class="live-badge">LIVE</span>`;
+    
+    // Останавливаем текущее
+    if (isPlaying) {
+        audio.pause();
+        isPlaying = false;
+        updatePlayButton();
+    }
+    
     audio.src = s.stream;
-    updateCover();
+    updateCover(i);
+    updateActiveStation(i);
+    
+    // Если играло — запускаем
+    if (isPlaying) {
+        audio.play().catch(e => console.log('Ожидание взаимодействия'));
+    }
 }
 
-/* play */
-function toggle() {
-    const btn = document.querySelector(".play");
+/* обновление активной станции в списке */
+function updateActiveStation(activeIndex) {
+    document.querySelectorAll('.station').forEach((el, idx) => {
+        if (idx === activeIndex) {
+            el.classList.add('active');
+        } else {
+            el.classList.remove('active');
+        }
+    });
+}
 
+/* play/pause */
+function toggle() {
+    if (!audio.src) {
+        load(index);
+    }
+    
     if (audio.paused) {
-        audio.play();
-        btn.innerText = "⏸";
+        audio.play().then(() => {
+            isPlaying = true;
+            updatePlayButton();
+        }).catch(e => {
+            console.log('Автовоспроизведение заблокировано');
+            isPlaying = false;
+            updatePlayButton();
+        });
     } else {
         audio.pause();
-        btn.innerText = "▶";
+        isPlaying = false;
+        updatePlayButton();
     }
+}
+
+function updatePlayButton() {
+    playBtn.innerText = isPlaying ? "⏸" : "▶";
+    liveIndicator.style.display = isPlaying ? "inline-block" : "none";
 }
 
 /* переключение */
 function next() {
     index = (index + 1) % stations.length;
     load(index);
-    audio.play();
+    if (isPlaying) {
+        audio.play().catch(() => {});
+    }
 }
 
 function prev() {
     index = (index - 1 + stations.length) % stations.length;
     load(index);
-    audio.play();
+    if (isPlaying) {
+        audio.play().catch(() => {});
+    }
 }
 
-/* список */
+/* создание списка с иконками */
 const list = document.getElementById("list");
 
 stations.forEach((s, i) => {
     const el = document.createElement("div");
     el.className = "station";
-    el.innerText = s.name;
-
+    if (i === index) el.classList.add("active");
+    
+    el.innerHTML = `
+        <div class="station-icon" style="background-image: url('${s.cover}')"></div>
+        <div class="station-info">
+            <div class="station-name">${s.name}</div>
+            <div class="station-status">🎵 Радио</div>
+        </div>
+    `;
+    
     el.onclick = () => {
-        index = i;
-        load(index);
-        audio.play();
+        if (index === i) {
+            // Если та же станция — просто play/pause
+            toggle();
+        } else {
+            index = i;
+            load(index);
+            // Автозапуск при смене
+            if (!isPlaying) {
+                isPlaying = true;
+            }
+            audio.play().catch(() => {});
+            updatePlayButton();
+        }
     };
-
+    
     list.appendChild(el);
 });
 
@@ -261,12 +437,38 @@ volume.addEventListener("input", () => {
     audio.volume = volume.value;
 });
 
-/* обновление обложки */
-setInterval(updateCover, 10000);
+/* обработка событий аудио */
+audio.addEventListener("play", () => {
+    isPlaying = true;
+    updatePlayButton();
+});
+
+audio.addEventListener("pause", () => {
+    isPlaying = false;
+    updatePlayButton();
+});
+
+audio.addEventListener("error", (e) => {
+    console.error("Ошибка потока:", e);
+    trackEl.innerHTML = `Ошибка загрузки <span style="color:#ff3b30;">⚠️</span>`;
+    isPlaying = false;
+    updatePlayButton();
+});
+
+audio.addEventListener("waiting", () => {
+    trackEl.innerHTML = `Буферизация... <span class="live-badge">LIVE</span>`;
+});
+
+audio.addEventListener("playing", () => {
+    trackEl.innerHTML = `LIVE RADIO <span class="live-badge">LIVE</span>`;
+});
 
 /* старт */
 load(index);
 audio.volume = volume.value;
+
+// Периодическое обновление обложки? НЕТ, теперь обложка статическая и привязана к станции
+// setInterval(updateCover, 10000); // УБИРАЕМ, обложка меняется только при смене станции
 </script>
 
 </body>
