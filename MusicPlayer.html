@@ -302,18 +302,18 @@
 
        <!-- Firebase SDK -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, onValue, update, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+      import { initializeApp } from "firebase/app";
+      import { getAnalytics } from "firebase/analytics";
 
         // ⚠️ ЗАМЕНИ НА СВОИ ДАННЫЕ ИЗ FIREBASE CONSOLE
         const firebaseConfig = {
-            apiKey: "AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX",
-            authDomain: "твой-проект.firebaseapp.com",
-            databaseURL: "https://твой-проект-default-rtdb.firebaseio.com",
-            projectId: "твой-проект",
-            storageBucket: "твой-проект.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef123456"
+          apiKey: "AIzaSyBgNM3o2Gp-T-jn-wQ_ObvRuj3lmFyRqLE",
+          authDomain: "musicplayer-94459.firebaseapp.com",
+          projectId: "musicplayer-94459",
+          storageBucket: "musicplayer-94459.firebasestorage.app",
+          messagingSenderId: "721634417930",
+          appId: "1:721634417930:web:78b58d78d1d7f1dd07aef3",
+          measurementId: "G-0QME0G40KL"
         };
 
         const app = initializeApp(firebaseConfig);
