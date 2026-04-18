@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path fill='%230a84ff' d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
-<title>♫ Music Player</title>
+<title>♫ Music Player • Онлайн</title>
 <style>
     body {
         margin: 0;
@@ -229,6 +229,46 @@
         font-weight: 600;
     }
 
+    /* Виджет счётчика посетителей (справа снизу) */
+    .visitor-counter {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        z-index: 100;
+        background: rgba(10, 10, 18, 0.65);
+        backdrop-filter: blur(16px) saturate(180%);
+        -webkit-backdrop-filter: blur(16px) saturate(180%);
+        border-radius: 40px;
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border: 1px solid rgba(255,255,255,0.12);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
+        font-size: 16px;
+        font-weight: 500;
+        color: #f0f0ff;
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .visitor-icon {
+        font-size: 24px;
+        filter: drop-shadow(0 0 8px #0a84ff);
+    }
+
+    #visitorCount {
+        font-weight: 700;
+        font-size: 22px;
+        color: white;
+        min-width: 2.2em;
+        text-align: center;
+        background: rgba(10,132,255,0.2);
+        padding: 4px 8px;
+        border-radius: 30px;
+        border: 1px solid rgba(10,132,255,0.3);
+    }
+
     @keyframes pulse {
         0%, 100% { opacity: 1; box-shadow: 0 0 5px #ff3b30; }
         50% { opacity: 0.6; box-shadow: 0 0 12px #ff3b30; }
@@ -258,6 +298,13 @@
 <body>
 
     <canvas id="visualizer-bg"></canvas>
+
+    <!-- Плавающий счётчик посетителей -->
+    <div class="visitor-counter">
+        <span class="visitor-icon">👥</span>
+        <span>Сейчас на странице:</span>
+        <span id="visitorCount">1</span>
+    </div>
 
     <div class="player">
         <div id="cover" class="cover"></div>
@@ -293,45 +340,18 @@
     (function(){
         "use strict";
 
-  const stations = [
-              { 
-                  name: "LoFi Hip Hop", 
-                  stream: "https://lofi.stream.laut.fm/lofi",
-                  cover: "https://sun9-22.userapi.com/OXZmvvez6Cr1gT71iFsx7Og8mg3FX-0I0qKdCw/gcFKCD2dUSo.jpg"
-              },
-              { 
-                  name: "Trap", 
-                  stream: "https://radiorecord.hostingradio.ru/trap96.aacp",
-                  cover: "https://e0.pxfuel.com/wallpapers/941/1012/desktop-wallpaper-trap-music-tip-for-your-mobile-tablet-explore-trap-trap-background-trap-music-live-trap-music-trap-art.jpg"
-              },
-              { 
-                  name: "DFM", 
-                  stream: "https://dfm.hostingradio.ru/dfm128.mp3",
-                  cover: "https://play-lh.googleusercontent.com/Ib-OXFvEaaofa9bErURv9zbr3CrU4Xik37fRu9AWuxRK2GHJCGsVObOWhmnscCu6jv25UmC0vYhzvT0vSl9lWbg"
-              },
-              { 
-                  name: "Хайп FM", 
-                  stream: "https://air.volna.top/HypeFM",
-                  cover: "https://radiopotok.ru/f/station/512/1567.png"
-              },
-              { 
-                  name: "Новое Радио", 
-                  stream: "icecast-newradio.cdnvideo.ru/newradio3",
-                  cover: "https://radiopotok.ru/f/station/512/221.png"
-              },
-              { 
-                  name: "Rock Radio", 
-                  stream: "https://rockradio.stream.laut.fm/rockradio",
-                  cover: "https://play-lh.googleusercontent.com/GB5h6krjJRyABrCSnDHg4qz6-6CJg2W3-8HLqczsebzBX3WtY5INePZPl46ssQBIyoY"
-              },
-              { 
-                  name: "Клубная Музыка", 
-                  stream: "https://radiorecord.hostingradio.ru/rmx96.aacp",
-                  cover: "https://cdn-image.zvuk.com/pic?hash=5a6036a0-273a-4281-86b7-b5ac94e24d70&id=48196294&size=large&type=release"
-              },
-      
-          ];
+        // ---------- Станции ----------
+        const stations = [
+            { name: "LoFi Hip Hop", stream: "https://lofi.stream.laut.fm/lofi", cover: "https://sun9-22.userapi.com/OXZmvvez6Cr1gT71iFsx7Og8mg3FX-0I0qKdCw/gcFKCD2dUSo.jpg" },
+            { name: "Trap", stream: "https://radiorecord.hostingradio.ru/trap96.aacp", cover: "https://e0.pxfuel.com/wallpapers/941/1012/desktop-wallpaper-trap-music-tip-for-your-mobile-tablet-explore-trap-trap-background-trap-music-live-trap-music-trap-art.jpg" },
+            { name: "DFM", stream: "https://dfm.hostingradio.ru/dfm128.mp3", cover: "https://play-lh.googleusercontent.com/Ib-OXFvEaaofa9bErURv9zbr3CrU4Xik37fRu9AWuxRK2GHJCGsVObOWhmnscCu6jv25UmC0vYhzvT0vSl9lWbg" },
+            { name: "Хайп FM", stream: "https://air.volna.top/HypeFM", cover: "https://radiopotok.ru/f/station/512/1567.png" },
+            { name: "Новое Радио", stream: "icecast-newradio.cdnvideo.ru/newradio3", cover: "https://radiopotok.ru/f/station/512/221.png" },
+            { name: "Rock Radio", stream: "https://rockradio.stream.laut.fm/rockradio", cover: "https://play-lh.googleusercontent.com/GB5h6krjJRyABrCSnDHg4qz6-6CJg2W3-8HLqczsebzBX3WtY5INePZPl46ssQBIyoY" },
+            { name: "Клубная Музыка", stream: "https://radiorecord.hostingradio.ru/rmx96.aacp", cover: "https://cdn-image.zvuk.com/pic?hash=5a6036a0-273a-4281-86b7-b5ac94e24d70&id=48196294&size=large&type=release" }
+        ];
 
+        // DOM элементы
         let audio = document.getElementById("audio");
         const volumeSlider = document.getElementById("volume");
         const coverEl = document.getElementById("cover");
@@ -340,6 +360,7 @@
         const playBtn = document.getElementById("playBtn");
         const liveIndicator = document.getElementById("liveIndicator");
         const listEl = document.getElementById("list");
+        const visitorCountSpan = document.getElementById("visitorCount");
 
         let index = 0;
         let isPlaying = false;
@@ -353,6 +374,79 @@
         const canvas = document.getElementById('visualizer-bg');
         const ctx = canvas.getContext('2d');
 
+        // ---------- BroadcastChannel для счётчика посетителей (все открытые вкладки) ----------
+        const channelName = 'music-player-visitors';
+        let bc = null;
+        let visitorCount = 1; // начинаем с 1 (эта вкладка)
+        const tabId = Date.now() + '-' + Math.random().toString(36);
+
+        function updateVisitorDisplay() {
+            if (visitorCountSpan) {
+                visitorCountSpan.textContent = visitorCount;
+            }
+        }
+
+        function initBroadcastChannel() {
+            try {
+                bc = new BroadcastChannel(channelName);
+                
+                // Сообщаем о своём появлении
+                bc.postMessage({ type: 'join', tabId });
+                
+                // Запрашиваем текущее состояние других вкладок
+                bc.postMessage({ type: 'query', tabId });
+                
+                // Таймер для сбора ответов (чтобы не было гонки)
+                setTimeout(() => {
+                    // Уже получили ответы, просто пересчитаем
+                    updateVisitorDisplay();
+                }, 200);
+                
+                bc.onmessage = (event) => {
+                    const msg = event.data;
+                    if (!msg) return;
+                    
+                    // Игнорируем собственные сообщения (на всякий случай)
+                    if (msg.tabId === tabId) return;
+                    
+                    if (msg.type === 'query') {
+                        // Нас запросили — отвечаем, что мы здесь
+                        bc.postMessage({ type: 'response', tabId });
+                    } else if (msg.type === 'response') {
+                        // Пришёл ответ от другой вкладки
+                        visitorCount++;
+                        updateVisitorDisplay();
+                    } else if (msg.type === 'join') {
+                        visitorCount++;
+                        updateVisitorDisplay();
+                    } else if (msg.type === 'leave') {
+                        visitorCount = Math.max(1, visitorCount - 1);
+                        updateVisitorDisplay();
+                    }
+                };
+                
+                // При закрытии/обновлении страницы сообщаем, что уходим
+                window.addEventListener('beforeunload', () => {
+                    if (bc) {
+                        bc.postMessage({ type: 'leave', tabId });
+                    }
+                });
+                
+                // Периодически проверяем связь (на случай, если вкладка зависла) — опционально
+                // setInterval(() => { bc.postMessage({ type: 'ping', tabId }); }, 5000);
+                
+            } catch(e) {
+                console.warn('BroadcastChannel не поддерживается, счётчик будет показывать 1');
+                bc = null;
+                visitorCount = 1;
+                updateVisitorDisplay();
+            }
+        }
+
+        // Инициализируем канал сразу
+        initBroadcastChannel();
+
+        // ---------- Воссоздание аудио элемента ----------
         function recreateAudioElement() {
             const oldAudio = audio;
             const parent = oldAudio.parentNode;
@@ -365,9 +459,7 @@
             newAudio.volume = oldAudio.volume;
             newAudio.currentTime = oldAudio.currentTime;
             
-            if (parent) {
-                parent.replaceChild(newAudio, oldAudio);
-            }
+            if (parent) parent.replaceChild(newAudio, oldAudio);
             
             newAudio.addEventListener("play", () => {
                 isPlaying = true;
@@ -444,18 +536,12 @@
 
         function cleanupWebAudio() {
             if (source) {
-                try { 
-                    source.disconnect(); 
-                } catch(e) {}
+                try { source.disconnect(); } catch(e) {}
                 source = null;
             }
-            if (analyser) {
-                analyser = null;
-            }
+            if (analyser) analyser = null;
             if (audioContext) {
-                try {
-                    audioContext.close();
-                } catch(e) {}
+                try { audioContext.close(); } catch(e) {}
                 audioContext = null;
             }
         }
@@ -471,9 +557,7 @@
             }
             
             stopVisualizer();
-            
             cleanupWebAudio();
-            
             recreateAudioElement();
             
             audio.src = s.stream;
@@ -508,7 +592,6 @@
                 analyser.connect(audioContext.destination);
                 
                 startVisualizer();
-                
                 return audioContext;
             } catch(e) {
                 console.warn('Web Audio error:', e);
@@ -553,15 +636,12 @@
                         ctx.shadowColor = '#0a84ff';
                         ctx.shadowBlur = 18;
                         
-                        let hasData = false;
                         for (let i = 0; i < bufferLength; i++) {
                             let value = dataArray[i];
-                            if (value > 0) hasData = true;
                             let boost = i < 30 ? 2.0 : 1.0;
                             let barHeight = (value / 255) * canvas.height * 0.7 * boost;
                             
                             const xPos = i * (barWidth + 1);
-                            
                             ctx.fillRect(xPos, centerY - barHeight/2, barWidth, barHeight);
                             
                             if (value > 200) {
@@ -592,7 +672,6 @@
                         ctx.shadowBlur = 0;
                         
                     } catch(e) {
-                        console.warn('Visualizer error:', e);
                         drawFallback();
                     }
                     
@@ -610,21 +689,6 @@
             grad.addColorStop(1, '#000000');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.shadowBlur = 20;
-            ctx.beginPath();
-            const centerY = canvas.height / 2;
-            const time = Date.now() * 0.003;
-            const pulseHeight = Math.sin(time) * 20 + 30;
-            ctx.moveTo(0, centerY);
-            for (let x = 0; x < canvas.width; x += 20) {
-                const yOffset = Math.sin(x * 0.02 + time) * pulseHeight;
-                ctx.lineTo(x, centerY + yOffset);
-            }
-            ctx.strokeStyle = 'rgba(10,132,255,0.3)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            ctx.shadowBlur = 0;
         }
 
         async function toggle() {
@@ -635,7 +699,6 @@
             
             if (audio.paused) {
                 trackEl.innerHTML = `Загрузка... <span class="loading-indicator"></span>`;
-                
                 try {
                     await audio.play();
                     isPlaying = true;
@@ -669,6 +732,7 @@
             loadStation(index, true);
         }
 
+        // Строим список станций
         stations.forEach((s, i) => {
             const el = document.createElement("div");
             el.className = "station";
@@ -698,10 +762,9 @@
 
         loadStation(0, false);
         
-        window.addEventListener('resize', () => {
-            drawFallback();
-        });
+        window.addEventListener('resize', () => drawFallback());
 
+        // Глобальные функции для кнопок
         window.toggle = toggle;
         window.next = next;
         window.prev = prev;
