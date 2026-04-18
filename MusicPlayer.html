@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -293,7 +294,6 @@
     (function(){
         "use strict";
 
-        // ПРОВЕРЕННЫЕ РАБОЧИЕ СТАНЦИИ (работают в России)
         const stations = [
             { 
                 name: "Русское Радио", 
@@ -344,7 +344,6 @@
         const canvas = document.getElementById('visualizer-bg');
         const ctx = canvas.getContext('2d');
 
-        // Функция для пересоздания audio элемента (решает проблему с MediaElementSourceNode)
         function recreateAudioElement() {
             const oldAudio = audio;
             const parent = oldAudio.parentNode;
@@ -353,17 +352,14 @@
             newAudio.preload = 'auto';
             newAudio.crossOrigin = 'anonymous';
             
-            // Копируем важные свойства
             if (oldAudio.src) newAudio.src = oldAudio.src;
             newAudio.volume = oldAudio.volume;
             newAudio.currentTime = oldAudio.currentTime;
             
-            // Заменяем элемент
             if (parent) {
                 parent.replaceChild(newAudio, oldAudio);
             }
             
-            // Копируем обработчики событий
             newAudio.addEventListener("play", () => {
                 isPlaying = true;
                 updatePlayButton();
@@ -460,38 +456,30 @@
             titleEl.innerText = s.name;
             trackEl.innerHTML = `Подготовка... <span class="loading-indicator"></span>`;
             
-            // Останавливаем текущее воспроизведение
             if (isPlaying) {
                 audio.pause();
                 isPlaying = false;
             }
             
-            // Останавливаем визуализатор
             stopVisualizer();
             
-            // Очищаем Web Audio
             cleanupWebAudio();
             
-            // Пересоздаем audio элемент для избежания конфликта MediaElementSourceNode
             recreateAudioElement();
             
-            // Загружаем новый источник
             audio.src = s.stream;
             audio.load();
             
             updateCover(i);
             updateActiveStation(i);
             
-            // Устанавливаем флаг для автовоспроизведения
             pendingPlay = autoPlay;
             updatePlayButton();
             
-            // Рисуем фолбэк
             drawFallback();
         }
 
         async function initAudioContext() {
-            // Если уже есть рабочий контекст, просто возобновляем
             if (audioContext && audioContext.state !== 'closed') {
                 if (audioContext.state === 'suspended') {
                     await audioContext.resume();
@@ -499,21 +487,17 @@
                 return audioContext;
             }
             
-            // Очищаем старые подключения
             cleanupWebAudio();
             
             try {
-                // Создаем новый контекст
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
                 analyser = audioContext.createAnalyser();
                 analyser.fftSize = 256;
                 
-                // Создаем новый источник из audio элемента
                 source = audioContext.createMediaElementSource(audio);
                 source.connect(analyser);
                 analyser.connect(audioContext.destination);
                 
-                // Запускаем визуализатор
                 startVisualizer();
                 
                 return audioContext;
@@ -532,7 +516,6 @@
                         return;
                     }
                     
-                    // Проверяем, существует ли analyser
                     if (!analyser || !audioContext || audioContext.state === 'closed') {
                         drawFallback();
                         animationFrame = requestAnimationFrame(animate);
@@ -619,7 +602,6 @@
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
             
-            // Пульсирующий эффект
             ctx.shadowBlur = 20;
             ctx.beginPath();
             const centerY = canvas.height / 2;
@@ -678,7 +660,6 @@
             loadStation(index, true);
         }
 
-        // Создание списка
         stations.forEach((s, i) => {
             const el = document.createElement("div");
             el.className = "station";
@@ -706,7 +687,6 @@
         });
         audio.volume = volumeSlider.value;
 
-        // Старт - загружаем первую станцию
         loadStation(0, false);
         
         window.addEventListener('resize', () => {
@@ -717,7 +697,6 @@
         window.next = next;
         window.prev = prev;
 
-        // Автозапуск контекста при первом клике
         document.body.addEventListener('click', () => {
             if (audioContext && audioContext.state === 'suspended') {
                 audioContext.resume();
@@ -728,3 +707,4 @@
 </script>
 </body>
 </html>
+```
