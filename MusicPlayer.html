@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path fill='%230a84ff' d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
-    <title>♫ Music Player</title>
+    <title>♫ Music Player • Слушатели онлайн</title>
     <style>
-        /* все стили остаются без изменений */
+        /* === Твои стили без изменений === */
         body {
             margin: 0;
             min-height: 100vh;
@@ -300,14 +300,15 @@
 
     <audio id="audio" preload="auto" crossorigin="anonymous"></audio>
 
-    <!-- Firebase SDK (исправленные импорты) -->
+    <!-- Firebase SDK + Database -->
     <script type="module">
-        // Импорты Firebase
+        // ---------- ТВОЙ БЛОК ИНИЦИАЛИЗАЦИИ FIREBASE (обновлён) ----------
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
-          import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+        // Добавляем Realtime Database для счётчика
+        import { getDatabase, ref, onValue, update, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-database.js";
 
-        // Твой конфиг Firebase
-          const firebaseConfig = {
+        const firebaseConfig = {
             apiKey: "AIzaSyBgNM3o2Gp-T-jn-wQ_ObvRuj3lmFyRqLE",
             authDomain: "musicplayer-94459.firebaseapp.com",
             projectId: "musicplayer-94459",
@@ -315,11 +316,11 @@
             messagingSenderId: "721634417930",
             appId: "1:721634417930:web:78b58d78d1d7f1dd07aef3",
             measurementId: "G-0QME0G40KL"
-          };
+        };
 
-        // Инициализация Firebase
-      const app = initializeApp(firebaseConfig);
-      const analytics = getAnalytics(app);
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);   // можно оставить, не мешает
+        const db = getDatabase(app);
 
         // ---------- Станции ----------
         const stations = [
@@ -356,7 +357,6 @@
         const ctx = canvas.getContext('2d');
 
         // ---------- Firebase: счётчик слушателей ----------
-        // Генерируем уникальный ID для этой вкладки
         function generateClientId() {
             return Date.now() + '-' + Math.random().toString(36).substr(2, 9);
         }
@@ -366,38 +366,33 @@
         const myListenerRef = ref(db, `listeners/${clientId}`);
         let globalListeners = 0;
 
-        // Слушаем общее количество активных слушателей
+        // Отслеживаем изменения количества слушателей
         onValue(listenersRef, (snapshot) => {
             const data = snapshot.val();
             globalListeners = data ? Object.keys(data).length : 0;
             listenerCountSpan.textContent = globalListeners;
         });
 
-        // Присоединяемся к слушателям
         function listenerJoin() {
             if (!isPlaying) return;
-            // Записываем себя в базу с временной меткой
             update(myListenerRef, {
                 active: true,
                 timestamp: serverTimestamp()
             });
-            // При отключении (закрытие вкладки) автоматически удаляем запись
             onDisconnect(myListenerRef).remove();
         }
 
-        // Уходим из слушателей
         function listenerLeave() {
-            update(myListenerRef, null); // удаляем запись
+            update(myListenerRef, null);
         }
 
-        // При закрытии страницы тоже удаляем (дублируем на всякий случай)
         window.addEventListener('beforeunload', () => {
             if (isPlaying) {
                 update(myListenerRef, null);
             }
         });
 
-        // ---------- Воссоздание аудио элемента ----------
+        // ---------- Аудио плеер (логика без изменений) ----------
         function recreateAudioElement() {
             const oldAudio = audio;
             const parent = oldAudio.parentNode;
