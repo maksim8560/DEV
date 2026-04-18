@@ -303,11 +303,11 @@
     <!-- Firebase SDK (исправленные импорты) -->
     <script type="module">
         // Импорты Firebase
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getDatabase, ref, onValue, update, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+          import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
 
         // Твой конфиг Firebase
-        const firebaseConfig = {
+          const firebaseConfig = {
             apiKey: "AIzaSyBgNM3o2Gp-T-jn-wQ_ObvRuj3lmFyRqLE",
             authDomain: "musicplayer-94459.firebaseapp.com",
             projectId: "musicplayer-94459",
@@ -315,11 +315,11 @@
             messagingSenderId: "721634417930",
             appId: "1:721634417930:web:78b58d78d1d7f1dd07aef3",
             measurementId: "G-0QME0G40KL"
-        };
+          };
 
         // Инициализация Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
+      const app = initializeApp(firebaseConfig);
+      const analytics = getAnalytics(app);
 
         // ---------- Станции ----------
         const stations = [
