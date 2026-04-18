@@ -34,7 +34,7 @@
     .player {
         position: relative;
         z-index: 10;
-        width: 360px;
+        width: 340px;
         padding: 22px 20px;
         border-radius: 36px;
         background: rgba(10, 10, 14, 0.45);
@@ -229,37 +229,6 @@
         font-weight: 600;
     }
 
-    /* Счётчик слушателей */
-    .listeners-panel {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 12px;
-        padding: 8px 12px;
-        background: rgba(10,132,255,0.12);
-        border-radius: 40px;
-        border: 1px solid rgba(255,255,255,0.1);
-        backdrop-filter: blur(4px);
-        font-size: 14px;
-        font-weight: 500;
-        color: #e0e0ff;
-    }
-
-    .listeners-icon {
-        font-size: 18px;
-        filter: drop-shadow(0 0 6px #0a84ff);
-    }
-
-    #listenerCount {
-        font-weight: 700;
-        color: white;
-        margin: 0 4px;
-        min-width: 2em;
-        display: inline-block;
-        text-align: center;
-    }
-
     @keyframes pulse {
         0%, 100% { opacity: 1; box-shadow: 0 0 5px #ff3b30; }
         50% { opacity: 0.6; box-shadow: 0 0 12px #ff3b30; }
@@ -311,13 +280,6 @@
             <span>🔊</span>
         </div>
 
-        <!-- Счётчик слушателей -->
-        <div class="listeners-panel">
-            <span class="listeners-icon">🎧</span>
-            <span>Сейчас слушают:</span>
-            <span id="listenerCount">0</span>
-        </div>
-
         <div class="list" id="list"></div>
 
         <div class="footer">
@@ -331,18 +293,45 @@
     (function(){
         "use strict";
 
-        // ---------- Станции ----------
-        const stations = [
-            { name: "LoFi Hip Hop", stream: "https://lofi.stream.laut.fm/lofi", cover: "https://sun9-22.userapi.com/OXZmvvez6Cr1gT71iFsx7Og8mg3FX-0I0qKdCw/gcFKCD2dUSo.jpg" },
-            { name: "Trap", stream: "https://radiorecord.hostingradio.ru/trap96.aacp", cover: "https://e0.pxfuel.com/wallpapers/941/1012/desktop-wallpaper-trap-music-tip-for-your-mobile-tablet-explore-trap-trap-background-trap-music-live-trap-music-trap-art.jpg" },
-            { name: "DFM", stream: "https://dfm.hostingradio.ru/dfm128.mp3", cover: "https://play-lh.googleusercontent.com/Ib-OXFvEaaofa9bErURv9zbr3CrU4Xik37fRu9AWuxRK2GHJCGsVObOWhmnscCu6jv25UmC0vYhzvT0vSl9lWbg" },
-            { name: "Хайп FM", stream: "https://air.volna.top/HypeFM", cover: "https://radiopotok.ru/f/station/512/1567.png" },
-            { name: "Новое Радио", stream: "icecast-newradio.cdnvideo.ru/newradio3", cover: "https://radiopotok.ru/f/station/512/221.png" },
-            { name: "Rock Radio", stream: "https://rockradio.stream.laut.fm/rockradio", cover: "https://play-lh.googleusercontent.com/GB5h6krjJRyABrCSnDHg4qz6-6CJg2W3-8HLqczsebzBX3WtY5INePZPl46ssQBIyoY" },
-            { name: "Клубная Музыка", stream: "https://radiorecord.hostingradio.ru/rmx96.aacp", cover: "https://cdn-image.zvuk.com/pic?hash=5a6036a0-273a-4281-86b7-b5ac94e24d70&id=48196294&size=large&type=release" }
-        ];
+  const stations = [
+              { 
+                  name: "LoFi Hip Hop", 
+                  stream: "https://lofi.stream.laut.fm/lofi",
+                  cover: "https://sun9-22.userapi.com/OXZmvvez6Cr1gT71iFsx7Og8mg3FX-0I0qKdCw/gcFKCD2dUSo.jpg"
+              },
+              { 
+                  name: "Trap", 
+                  stream: "https://radiorecord.hostingradio.ru/trap96.aacp",
+                  cover: "https://e0.pxfuel.com/wallpapers/941/1012/desktop-wallpaper-trap-music-tip-for-your-mobile-tablet-explore-trap-trap-background-trap-music-live-trap-music-trap-art.jpg"
+              },
+              { 
+                  name: "DFM", 
+                  stream: "https://dfm.hostingradio.ru/dfm128.mp3",
+                  cover: "https://play-lh.googleusercontent.com/Ib-OXFvEaaofa9bErURv9zbr3CrU4Xik37fRu9AWuxRK2GHJCGsVObOWhmnscCu6jv25UmC0vYhzvT0vSl9lWbg"
+              },
+              { 
+                  name: "Хайп FM", 
+                  stream: "https://air.volna.top/HypeFM",
+                  cover: "https://radiopotok.ru/f/station/512/1567.png"
+              },
+              { 
+                  name: "Новое Радио", 
+                  stream: "icecast-newradio.cdnvideo.ru/newradio3",
+                  cover: "https://radiopotok.ru/f/station/512/221.png"
+              },
+              { 
+                  name: "Rock Radio", 
+                  stream: "https://rockradio.stream.laut.fm/rockradio",
+                  cover: "https://play-lh.googleusercontent.com/GB5h6krjJRyABrCSnDHg4qz6-6CJg2W3-8HLqczsebzBX3WtY5INePZPl46ssQBIyoY"
+              },
+              { 
+                  name: "Клубная Музыка", 
+                  stream: "https://radiorecord.hostingradio.ru/rmx96.aacp",
+                  cover: "https://cdn-image.zvuk.com/pic?hash=5a6036a0-273a-4281-86b7-b5ac94e24d70&id=48196294&size=large&type=release"
+              },
+      
+          ];
 
-        // ---------- DOM элементы ----------
         let audio = document.getElementById("audio");
         const volumeSlider = document.getElementById("volume");
         const coverEl = document.getElementById("cover");
@@ -351,7 +340,6 @@
         const playBtn = document.getElementById("playBtn");
         const liveIndicator = document.getElementById("liveIndicator");
         const listEl = document.getElementById("list");
-        const listenerCountSpan = document.getElementById("listenerCount");
 
         let index = 0;
         let isPlaying = false;
@@ -365,103 +353,6 @@
         const canvas = document.getElementById('visualizer-bg');
         const ctx = canvas.getContext('2d');
 
-        // ---------- BroadcastChannel для счётчика слушателей ----------
-        const channelName = 'music-player-listeners';
-        let bc = null;
-        let activeListenerCount = 0;
-        let isListenerActive = false;   // активен ли текущий плеер (играет)
-        const tabId = Date.now() + '-' + Math.random().toString(36);
-
-        // Инициализация канала
-        function initBroadcastChannel() {
-            try {
-                bc = new BroadcastChannel(channelName);
-                
-                // Запрашиваем текущее состояние при загрузке
-                bc.postMessage({ type: 'query', tabId });
-                
-                // Таймер для сбора ответов
-                setTimeout(() => {
-                    updateListenerDisplay();
-                }, 300);
-                
-                bc.onmessage = (event) => {
-                    const msg = event.data;
-                    if (!msg) return;
-                    
-                    if (msg.type === 'query') {
-                        // Кто-то запросил статус — отвечаем если активны
-                        if (isListenerActive) {
-                            bc.postMessage({ type: 'response', active: true, tabId });
-                        }
-                    } else if (msg.type === 'response' && msg.active) {
-                        // Увеличиваем временный счётчик
-                        activeListenerCount++;
-                        updateListenerDisplay();
-                    } else if (msg.type === 'join') {
-                        activeListenerCount++;
-                        updateListenerDisplay();
-                    } else if (msg.type === 'leave') {
-                        activeListenerCount = Math.max(0, activeListenerCount - 1);
-                        updateListenerDisplay();
-                    } else if (msg.type === 'sync') {
-                        // Получаем полное число от мастера (если реализовать)
-                        activeListenerCount = msg.count;
-                        updateListenerDisplay();
-                    }
-                };
-                
-                // При закрытии вкладки отправляем leave, если были активны
-                window.addEventListener('beforeunload', () => {
-                    if (isListenerActive && bc) {
-                        bc.postMessage({ type: 'leave', tabId });
-                    }
-                });
-            } catch(e) {
-                console.warn('BroadcastChannel не поддерживается, счётчик будет локальным');
-                bc = null;
-            }
-        }
-
-        function updateListenerDisplay() {
-            if (listenerCountSpan) {
-                listenerCountSpan.textContent = activeListenerCount;
-            }
-        }
-
-        // Вызывается при старте воспроизведения
-        function listenerJoin() {
-            if (!isListenerActive) {
-                isListenerActive = true;
-                if (bc) {
-                    bc.postMessage({ type: 'join', tabId });
-                    // Увеличиваем локально
-                    activeListenerCount++;
-                    updateListenerDisplay();
-                } else {
-                    // fallback — просто показываем 1
-                    activeListenerCount = 1;
-                    updateListenerDisplay();
-                }
-            }
-        }
-
-        // Вызывается при остановке (pause)
-        function listenerLeave() {
-            if (isListenerActive) {
-                isListenerActive = false;
-                if (bc) {
-                    bc.postMessage({ type: 'leave', tabId });
-                    activeListenerCount = Math.max(0, activeListenerCount - 1);
-                    updateListenerDisplay();
-                } else {
-                    activeListenerCount = 0;
-                    updateListenerDisplay();
-                }
-            }
-        }
-
-        // ---------- Воссоздание аудио элемента (обход багов) ----------
         function recreateAudioElement() {
             const oldAudio = audio;
             const parent = oldAudio.parentNode;
@@ -474,19 +365,19 @@
             newAudio.volume = oldAudio.volume;
             newAudio.currentTime = oldAudio.currentTime;
             
-            if (parent) parent.replaceChild(newAudio, oldAudio);
+            if (parent) {
+                parent.replaceChild(newAudio, oldAudio);
+            }
             
             newAudio.addEventListener("play", () => {
                 isPlaying = true;
                 updatePlayButton();
                 trackEl.innerHTML = `LIVE RADIO <span class="live-badge">LIVE</span>`;
-                listenerJoin();   // <-- Счётчик +1
             });
 
             newAudio.addEventListener("pause", () => {
                 isPlaying = false;
                 updatePlayButton();
-                listenerLeave();  // <-- Счётчик -1
             });
 
             newAudio.addEventListener("error", (e) => {
@@ -495,7 +386,6 @@
                 isPlaying = false;
                 updatePlayButton();
                 pendingPlay = false;
-                listenerLeave();
                 drawFallback();
             });
 
@@ -554,12 +444,18 @@
 
         function cleanupWebAudio() {
             if (source) {
-                try { source.disconnect(); } catch(e) {}
+                try { 
+                    source.disconnect(); 
+                } catch(e) {}
                 source = null;
             }
-            if (analyser) analyser = null;
+            if (analyser) {
+                analyser = null;
+            }
             if (audioContext) {
-                try { audioContext.close(); } catch(e) {}
+                try {
+                    audioContext.close();
+                } catch(e) {}
                 audioContext = null;
             }
         }
@@ -572,11 +468,12 @@
             if (isPlaying) {
                 audio.pause();
                 isPlaying = false;
-                listenerLeave();
             }
             
             stopVisualizer();
+            
             cleanupWebAudio();
+            
             recreateAudioElement();
             
             audio.src = s.stream;
@@ -611,6 +508,7 @@
                 analyser.connect(audioContext.destination);
                 
                 startVisualizer();
+                
                 return audioContext;
             } catch(e) {
                 console.warn('Web Audio error:', e);
@@ -655,12 +553,15 @@
                         ctx.shadowColor = '#0a84ff';
                         ctx.shadowBlur = 18;
                         
+                        let hasData = false;
                         for (let i = 0; i < bufferLength; i++) {
                             let value = dataArray[i];
+                            if (value > 0) hasData = true;
                             let boost = i < 30 ? 2.0 : 1.0;
                             let barHeight = (value / 255) * canvas.height * 0.7 * boost;
                             
                             const xPos = i * (barWidth + 1);
+                            
                             ctx.fillRect(xPos, centerY - barHeight/2, barWidth, barHeight);
                             
                             if (value > 200) {
@@ -691,6 +592,7 @@
                         ctx.shadowBlur = 0;
                         
                     } catch(e) {
+                        console.warn('Visualizer error:', e);
                         drawFallback();
                     }
                     
@@ -708,6 +610,21 @@
             grad.addColorStop(1, '#000000');
             ctx.fillStyle = grad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.shadowBlur = 20;
+            ctx.beginPath();
+            const centerY = canvas.height / 2;
+            const time = Date.now() * 0.003;
+            const pulseHeight = Math.sin(time) * 20 + 30;
+            ctx.moveTo(0, centerY);
+            for (let x = 0; x < canvas.width; x += 20) {
+                const yOffset = Math.sin(x * 0.02 + time) * pulseHeight;
+                ctx.lineTo(x, centerY + yOffset);
+            }
+            ctx.strokeStyle = 'rgba(10,132,255,0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+            ctx.shadowBlur = 0;
         }
 
         async function toggle() {
@@ -718,12 +635,12 @@
             
             if (audio.paused) {
                 trackEl.innerHTML = `Загрузка... <span class="loading-indicator"></span>`;
+                
                 try {
                     await audio.play();
                     isPlaying = true;
                     updatePlayButton();
                     trackEl.innerHTML = `LIVE RADIO <span class="live-badge">LIVE</span>`;
-                    listenerJoin();
                     await initAudioContext();
                     pendingPlay = false;
                 } catch(e) {
@@ -731,7 +648,6 @@
                     trackEl.innerHTML = `Ошибка воспроизведения <span style="color:#ff3b30;">⚠️</span>`;
                     isPlaying = false;
                     updatePlayButton();
-                    listenerLeave();
                 }
             } else {
                 audio.pause();
@@ -739,7 +655,6 @@
                 updatePlayButton();
                 trackEl.innerHTML = `Пауза`;
                 pendingPlay = false;
-                listenerLeave();
                 drawFallback();
             }
         }
@@ -754,7 +669,6 @@
             loadStation(index, true);
         }
 
-        // Строим список станций
         stations.forEach((s, i) => {
             const el = document.createElement("div");
             el.className = "station";
@@ -782,14 +696,12 @@
         });
         audio.volume = volumeSlider.value;
 
-        // Инициализация счётчика слушателей
-        initBroadcastChannel();
-        
         loadStation(0, false);
         
-        window.addEventListener('resize', () => drawFallback());
+        window.addEventListener('resize', () => {
+            drawFallback();
+        });
 
-        // Глобальные функции для кнопок
         window.toggle = toggle;
         window.next = next;
         window.prev = prev;
