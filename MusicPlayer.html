@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'><path fill='%230a84ff' d='M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z'/></svg>">
-<title>♫ Music Player • Онлайн</title>
+<title>♫ Music Player • Слушатели онлайн</title>
 <style>
     body {
         margin: 0;
@@ -229,44 +229,39 @@
         font-weight: 600;
     }
 
-    /* Виджет счётчика посетителей (справа снизу) */
-    .visitor-counter {
-        position: fixed;
-        bottom: 24px;
-        right: 24px;
-        z-index: 100;
-        background: rgba(10, 10, 18, 0.65);
-        backdrop-filter: blur(16px) saturate(180%);
-        -webkit-backdrop-filter: blur(16px) saturate(180%);
-        border-radius: 40px;
-        padding: 12px 18px;
+    /* Панель слушателей (внутри плеера) */
+    .listeners-panel {
         display: flex;
         align-items: center;
-        gap: 12px;
-        border: 1px solid rgba(255,255,255,0.12);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
-        font-size: 16px;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 16px;
+        padding: 10px 12px;
+        background: rgba(10,132,255,0.12);
+        border-radius: 40px;
+        border: 1px solid rgba(255,255,255,0.1);
+        backdrop-filter: blur(4px);
+        font-size: 14px;
         font-weight: 500;
-        color: #f0f0ff;
-        pointer-events: none;
-        user-select: none;
+        color: #e0e0ff;
     }
 
-    .visitor-icon {
-        font-size: 24px;
-        filter: drop-shadow(0 0 8px #0a84ff);
+    .listeners-icon {
+        font-size: 18px;
+        filter: drop-shadow(0 0 6px #0a84ff);
     }
 
-    #visitorCount {
+    #listenerCount {
         font-weight: 700;
-        font-size: 22px;
+        font-size: 18px;
         color: white;
-        min-width: 2.2em;
+        margin: 0 4px;
+        min-width: 2em;
+        display: inline-block;
         text-align: center;
-        background: rgba(10,132,255,0.2);
-        padding: 4px 8px;
-        border-radius: 30px;
-        border: 1px solid rgba(10,132,255,0.3);
+        background: rgba(0,0,0,0.2);
+        padding: 2px 8px;
+        border-radius: 20px;
     }
 
     @keyframes pulse {
@@ -299,12 +294,6 @@
 
     <canvas id="visualizer-bg"></canvas>
 
-    <!-- Плавающий счётчик посетителей -->
-    <div class="visitor-counter">
-        <span class="visitor-icon">👥</span>
-        <span id="visitorCount">1</span>
-    </div>
-
     <div class="player">
         <div id="cover" class="cover"></div>
 
@@ -324,6 +313,13 @@
             <span>🔉</span>
             <input type="range" id="volume" min="0" max="1" step="0.01" value="0.8">
             <span>🔊</span>
+        </div>
+
+        <!-- Счётчик активных слушателей -->
+        <div class="listeners-panel">
+            <span class="listeners-icon">🎧</span>
+            <span>Сейчас слушают:</span>
+            <span id="listenerCount">0</span>
         </div>
 
         <div class="list" id="list"></div>
@@ -359,7 +355,7 @@
         const playBtn = document.getElementById("playBtn");
         const liveIndicator = document.getElementById("liveIndicator");
         const listEl = document.getElementById("list");
-        const visitorCountSpan = document.getElementById("visitorCount");
+        const listenerCountSpan = document.getElementById("listenerCount");
 
         let index = 0;
         let isPlaying = false;
@@ -373,15 +369,16 @@
         const canvas = document.getElementById('visualizer-bg');
         const ctx = canvas.getContext('2d');
 
-        // ---------- BroadcastChannel для счётчика посетителей (все открытые вкладки) ----------
-        const channelName = 'music-player-visitors';
+        // ---------- BroadcastChannel для синхронизации слушателей ----------
+        const channelName = 'music-player-active-listeners';
         let bc = null;
-        let visitorCount = 1; // начинаем с 1 (эта вкладка)
+        let activeListeners = 0;          // общее число слушающих вкладок
+        let isListenerActive = false;     // играет ли музыка в этой вкладке
         const tabId = Date.now() + '-' + Math.random().toString(36);
 
-        function updateVisitorDisplay() {
-            if (visitorCountSpan) {
-                visitorCountSpan.textContent = visitorCount;
+        function updateListenerDisplay() {
+            if (listenerCountSpan) {
+                listenerCountSpan.textContent = activeListeners;
             }
         }
 
@@ -389,60 +386,84 @@
             try {
                 bc = new BroadcastChannel(channelName);
                 
-                // Сообщаем о своём появлении
-                bc.postMessage({ type: 'join', tabId });
-                
-                // Запрашиваем текущее состояние других вкладок
+                // Запрашиваем текущее состояние у других вкладок
                 bc.postMessage({ type: 'query', tabId });
                 
-                // Таймер для сбора ответов (чтобы не было гонки)
+                // Даём время на сбор ответов
                 setTimeout(() => {
-                    // Уже получили ответы, просто пересчитаем
-                    updateVisitorDisplay();
-                }, 200);
+                    updateListenerDisplay();
+                }, 250);
                 
                 bc.onmessage = (event) => {
                     const msg = event.data;
-                    if (!msg) return;
-                    
-                    // Игнорируем собственные сообщения (на всякий случай)
-                    if (msg.tabId === tabId) return;
+                    if (!msg || msg.tabId === tabId) return;
                     
                     if (msg.type === 'query') {
-                        // Нас запросили — отвечаем, что мы здесь
-                        bc.postMessage({ type: 'response', tabId });
+                        // Нас спрашивают — если мы слушаем, отвечаем
+                        if (isListenerActive) {
+                            bc.postMessage({ type: 'response', tabId });
+                        }
                     } else if (msg.type === 'response') {
-                        // Пришёл ответ от другой вкладки
-                        visitorCount++;
-                        updateVisitorDisplay();
+                        // Пришёл ответ от активной вкладки
+                        activeListeners++;
+                        updateListenerDisplay();
                     } else if (msg.type === 'join') {
-                        visitorCount++;
-                        updateVisitorDisplay();
+                        // Новая вкладка начала воспроизведение
+                        activeListeners++;
+                        updateListenerDisplay();
                     } else if (msg.type === 'leave') {
-                        visitorCount = Math.max(1, visitorCount - 1);
-                        updateVisitorDisplay();
+                        // Вкладка остановила музыку или закрылась
+                        activeListeners = Math.max(0, activeListeners - 1);
+                        updateListenerDisplay();
                     }
                 };
                 
-                // При закрытии/обновлении страницы сообщаем, что уходим
+                // При закрытии/обновлении отправляем leave, если были активны
                 window.addEventListener('beforeunload', () => {
-                    if (bc) {
+                    if (isListenerActive && bc) {
                         bc.postMessage({ type: 'leave', tabId });
                     }
                 });
-                
-                // Периодически проверяем связь (на случай, если вкладка зависла) — опционально
-                // setInterval(() => { bc.postMessage({ type: 'ping', tabId }); }, 5000);
-                
             } catch(e) {
-                console.warn('BroadcastChannel не поддерживается, счётчик будет показывать 1');
+                console.warn('BroadcastChannel не поддерживается, счётчик слушателей будет локальным');
                 bc = null;
-                visitorCount = 1;
-                updateVisitorDisplay();
+                activeListeners = 0;
+                updateListenerDisplay();
             }
         }
 
-        // Инициализируем канал сразу
+        // Вызывается при старте воспроизведения
+        function listenerJoin() {
+            if (!isListenerActive) {
+                isListenerActive = true;
+                if (bc) {
+                    bc.postMessage({ type: 'join', tabId });
+                    activeListeners++;
+                    updateListenerDisplay();
+                } else {
+                    // fallback
+                    activeListeners = 1;
+                    updateListenerDisplay();
+                }
+            }
+        }
+
+        // Вызывается при остановке
+        function listenerLeave() {
+            if (isListenerActive) {
+                isListenerActive = false;
+                if (bc) {
+                    bc.postMessage({ type: 'leave', tabId });
+                    activeListeners = Math.max(0, activeListeners - 1);
+                    updateListenerDisplay();
+                } else {
+                    activeListeners = 0;
+                    updateListenerDisplay();
+                }
+            }
+        }
+
+        // Инициализируем канал при загрузке
         initBroadcastChannel();
 
         // ---------- Воссоздание аудио элемента ----------
@@ -464,11 +485,13 @@
                 isPlaying = true;
                 updatePlayButton();
                 trackEl.innerHTML = `LIVE RADIO <span class="live-badge">LIVE</span>`;
+                listenerJoin();   // <-- Сообщаем, что начали слушать
             });
 
             newAudio.addEventListener("pause", () => {
                 isPlaying = false;
                 updatePlayButton();
+                listenerLeave();  // <-- Сообщаем, что перестали слушать
             });
 
             newAudio.addEventListener("error", (e) => {
@@ -477,6 +500,7 @@
                 isPlaying = false;
                 updatePlayButton();
                 pendingPlay = false;
+                listenerLeave();
                 drawFallback();
             });
 
@@ -553,6 +577,7 @@
             if (isPlaying) {
                 audio.pause();
                 isPlaying = false;
+                listenerLeave();
             }
             
             stopVisualizer();
@@ -703,6 +728,7 @@
                     isPlaying = true;
                     updatePlayButton();
                     trackEl.innerHTML = `LIVE RADIO <span class="live-badge">LIVE</span>`;
+                    listenerJoin();
                     await initAudioContext();
                     pendingPlay = false;
                 } catch(e) {
@@ -710,6 +736,7 @@
                     trackEl.innerHTML = `Ошибка воспроизведения <span style="color:#ff3b30;">⚠️</span>`;
                     isPlaying = false;
                     updatePlayButton();
+                    listenerLeave();
                 }
             } else {
                 audio.pause();
@@ -717,6 +744,7 @@
                 updatePlayButton();
                 trackEl.innerHTML = `Пауза`;
                 pendingPlay = false;
+                listenerLeave();
                 drawFallback();
             }
         }
